@@ -78,24 +78,41 @@ def _ensure_workspace_link():
 		return
 
 	workspace = frappe.get_doc("Workspace", WORKSPACE_NAME)
+	changed = _remove_obsolete_networking_link(workspace)
 	link_exists = any(
 		link.get("link_to") == PAGE_NAME and link.get("link_type") == "Page"
 		for link in workspace.get("links", [])
 	)
 
-	if link_exists:
+	if not link_exists:
+		workspace.append(
+			"links",
+			{
+				"type": "Link",
+				"link_type": "Page",
+				"link_to": PAGE_NAME,
+				"label": "IT Landscape Graph",
+			},
+		)
+		changed = True
+
+	if not changed:
 		frappe.log("IT Landscape Graph link already exists in workspace")
 		return
 
-	workspace.append(
-		"links",
-		{
-			"type": "Link",
-			"link_type": "Page",
-			"link_to": PAGE_NAME,
-			"label": "IT Landscape Graph",
-		},
-	)
 	workspace.save(ignore_permissions=True)
 	frappe.db.commit()
-	frappe.log("IT Landscape Graph link added to IT Management workspace")
+	frappe.log("IT Management workspace links updated")
+
+
+def _remove_obsolete_networking_link(workspace):
+	"""Remove the workspace link type that Frappe v16 no longer accepts."""
+	obsolete_links = [
+		link
+		for link in workspace.get("links", [])
+		if link.get("link_type") == "Workspace" and link.get("link_to") == "Networking"
+	]
+	for link in obsolete_links:
+		workspace.remove(link)
+
+	return bool(obsolete_links)
