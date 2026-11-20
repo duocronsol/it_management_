@@ -11,6 +11,11 @@ app_color = "blue"
 app_email = "Dienstleistungsverträge, Accounts und Internetleistungen.info@tueit.de"
 app_license = "GPL"
 
+# Apps
+# ------------------
+
+required_apps = ["erpnext"]
+
 # Includes in <head>
 # ------------------
 
